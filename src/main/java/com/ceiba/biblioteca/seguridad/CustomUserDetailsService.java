@@ -25,7 +25,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     //Método para traernos la lista de autoridades por medio de una lista de roles
     public Collection<GrantedAuthority> mapToAutorithies(List<Roles> roles){
-        return roles.stream().map(role -> new SimpleGrantedAuthority(role.getNombre())).collect(Collectors.toList());
+        return roles.stream().map(role -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toList());
     }
 
     //Método para traernos un usuario con todos sus datos por medio de sus usernames

@@ -3,26 +3,30 @@ package com.ceiba.biblioteca.seguridad;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
 import java.util.Date;
 
 @Component
-public class JwtTokenProvider {
+public class JwtGenerador {
     //Método para crear un token por medio de la autenticación
     public String generarToken(Authentication authentication){
         String  username = authentication.getName();
         Date tiempoActual = new Date();
         Date expiracionToken = new Date(tiempoActual.getTime() + ConstantesSeguridad.JWT_EXPIRATION_TOKEN);
 
+        SecretKey clave = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+
         //Linea para generar el Token
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(expiracionToken)
-                .signWith(SignatureAlgorithm.HS512, ConstantesSeguridad.JWT_FIRMA)
+                .signWith(clave)
                 .compact();
     }
 
