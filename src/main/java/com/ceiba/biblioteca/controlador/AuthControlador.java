@@ -8,6 +8,7 @@ import com.ceiba.biblioteca.modelo.Usuarios;
 import com.ceiba.biblioteca.repositorio.RolesRepositorio;
 import com.ceiba.biblioteca.repositorio.UsuarioRepositorio;
 import com.ceiba.biblioteca.seguridad.JwtGenerador;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,6 +30,7 @@ public class AuthControlador {
     private UsuarioRepositorio usuarioRepositorio;
     private JwtGenerador jwtGenerador;
 
+    @Autowired
     public AuthControlador(AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder, RolesRepositorio rolesRepositorio,
                            UsuarioRepositorio usuarioRepositorio, JwtGenerador jwtGenerador) {
         this.authenticationManager = authenticationManager;

@@ -20,10 +20,9 @@ public class LibroServicio {
                         .build();
                 libroRepositorio.save(libro);
             }
-            return ResponseEntity.ok("Se registró exitosamente el/los libro(s).");
+            return new ResponseEntity<>("Se registró exitosamente el/los libro(s).", HttpStatus.OK);
         }catch (Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error al procesar la solicitud: " + e.getMessage());
+            return new ResponseEntity<>("Error al procesar la solicitud: " + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 }
