@@ -23,7 +23,7 @@ public class LibroServicio {
                 } else {
                     mensaje.append("El libro '").append(detalle.getNombre()).append("' ya existe en la base de datos. No se insertará de nuevo.\n");
                 }
-                if (mensaje.length() > 0) {
+                if (!mensaje.isEmpty()) {
                     return new ResponseEntity<>(mensaje.toString(), HttpStatus.OK);
                 } else {
                     return new ResponseEntity<>("Se registraron exitosamente el/los libro(s).", HttpStatus.OK);

@@ -18,6 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity //Indicamos que se activa la seguridad Web en la app, además, será una clase que contendrá toda la configuración referente a la seguridad.
 public class SecurityConfig {
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private static final String ADMIN = "ADMIN";
     @Autowired
     public SecurityConfig(JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) {
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
@@ -46,20 +47,22 @@ public class SecurityConfig {
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
         http
                 .csrf(csrf -> csrf.disable())
-                .exceptionHandling() //Permitimos el manejo de excepciones
-                .authenticationEntryPoint(jwtAuthenticationEntryPoint) //Nos establece un punto de entrada personalizado de autenticación para el manejo de autenticaciones no autorizadas
+                    .exceptionHandling() //Permitimos el manejo de excepciones
+                    .authenticationEntryPoint(jwtAuthenticationEntryPoint) //Nos establece un punto de entrada personalizado de autenticación para el manejo de autenticaciones no autorizadas
                 .and()
                 .sessionManagement() //Permite la gestión de sessiones
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeHttpRequests() //Toda petición http debe ser autorizada
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/libro/insertar").hasAuthority("ADMIN")
-                .requestMatchers(HttpMethod.GET,"/api/usuario/obtener/**").hasAnyAuthority("ADMIN" , "USER")
-                .requestMatchers(HttpMethod.GET,"/api/celular/listarId/**").hasAnyAuthority("ADMIN" , "USER")
-                .requestMatchers(HttpMethod.DELETE,"/api/celular/eliminar/**").hasAuthority("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/celular/actualizar").hasAuthority("ADMIN")
-                .anyRequest().authenticated()
+                    .requestMatchers("/api/auth/**").permitAll()
+                    .requestMatchers("/doc/**").permitAll()
+                    .requestMatchers("/v3/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/libro/insertar").hasAuthority(ADMIN)
+                    .requestMatchers(HttpMethod.GET,"/api/usuario/obtener/**").hasAnyAuthority(ADMIN , "USER")
+                    .requestMatchers(HttpMethod.GET,"/api/celular/listarId/**").hasAnyAuthority(ADMIN , "USER")
+                    .requestMatchers(HttpMethod.DELETE,"/api/celular/eliminar/**").hasAuthority(ADMIN)
+                    .requestMatchers(HttpMethod.PUT, "/api/celular/actualizar").hasAuthority(ADMIN)
+                    .anyRequest().authenticated()
                 .and()
                 .httpBasic();
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

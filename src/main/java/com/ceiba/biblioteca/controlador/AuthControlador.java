@@ -8,7 +8,6 @@ import com.ceiba.biblioteca.modelo.Usuarios;
 import com.ceiba.biblioteca.repositorio.RolesRepositorio;
 import com.ceiba.biblioteca.repositorio.UsuarioRepositorio;
 import com.ceiba.biblioteca.seguridad.JwtGenerador;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,17 +19,16 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
+import java.util.NoSuchElementException;
 
 @Controller
 @RequestMapping("/api/auth/")
 public class AuthControlador {
-    private AuthenticationManager authenticationManager;
-    private PasswordEncoder passwordEncoder;
-    private RolesRepositorio rolesRepositorio;
-    private UsuarioRepositorio usuarioRepositorio;
-    private JwtGenerador jwtGenerador;
-
-    @Autowired
+    private final AuthenticationManager authenticationManager;
+    private final PasswordEncoder passwordEncoder;
+    private final RolesRepositorio rolesRepositorio;
+    private final UsuarioRepositorio usuarioRepositorio;
+    private final JwtGenerador jwtGenerador;
     public AuthControlador(AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder, RolesRepositorio rolesRepositorio,
                            UsuarioRepositorio usuarioRepositorio, JwtGenerador jwtGenerador) {
         this.authenticationManager = authenticationManager;
@@ -39,37 +37,37 @@ public class AuthControlador {
         this.usuarioRepositorio = usuarioRepositorio;
         this.jwtGenerador = jwtGenerador;
     }
-
     //Método para poder registrar usuarios con rol USER.
     @PostMapping("registro")
     public ResponseEntity<String> registrar(@RequestBody RegistroDTO registroDTO){
-        if (usuarioRepositorio.existsByUsername(registroDTO.getUsername())){
-            return new ResponseEntity<>("El usuario ya existe, intenta con otro.", HttpStatus.BAD_REQUEST);
+        if (Boolean.TRUE.equals(usuarioRepositorio.existsByUsername(registroDTO.getUsername()))){
+            return ResponseEntity.badRequest().body("El usuario ya existe, intenta con otro.");
         }
         Usuarios usuarios = new Usuarios();
         usuarios.setUsername(registroDTO.getUsername());
         usuarios.setPassword(passwordEncoder.encode(registroDTO.getPassword()));
-        Roles roles = rolesRepositorio.findByName("USER").get();
+        Roles roles = rolesRepositorio.findByName("USER")
+                .orElseThrow(() -> new NoSuchElementException("No se encontró el rol USER"));
         usuarios.setRoles(Collections.singletonList(roles));
         usuarioRepositorio.save(usuarios);
-        return new ResponseEntity<>("Registro de usuario exitoso.", HttpStatus.OK);
+        return ResponseEntity.ok().body("Registro de usuario exitoso.");
     }
 
     //Método para poder registrar usuarios con rol ADMIN.
     @PostMapping("registroAdm")
     public ResponseEntity<String> registrarAdmin (@RequestBody RegistroDTO registroDTO){
-        if (usuarioRepositorio.existsByUsername(registroDTO.getUsername())){
-            return new ResponseEntity<>("El usuario ya existe, intenta con otro.", HttpStatus.BAD_REQUEST);
+        if (Boolean.TRUE.equals(usuarioRepositorio.existsByUsername(registroDTO.getUsername()))){
+            return  ResponseEntity.badRequest().body("El usuario ya existe, intenta con otro.");
         }
         Usuarios usuarios = new Usuarios();
         usuarios.setUsername(registroDTO.getUsername());
         usuarios.setPassword(passwordEncoder.encode(registroDTO.getPassword()));
-        Roles roles = rolesRepositorio.findByName("ADMIN").get();
+        Roles roles = rolesRepositorio.findByName("ADMIN")
+                .orElseThrow(() -> new NoSuchElementException("No se encontró el rol ADMIN"));
         usuarios.setRoles(Collections.singletonList(roles));
         usuarioRepositorio.save(usuarios);
-        return new ResponseEntity<>("Registro de usuario administrador exitoso.", HttpStatus.OK);
+        return ResponseEntity.ok().body("Registro de usuario administrador exitoso.");
     }
-
     //Método para poder loguear un usuario y obtener un token.
     @PostMapping("login")
     public ResponseEntity<AuthRespuestaDTO> login(@RequestBody LoginDTO loginDTO){
@@ -79,5 +77,4 @@ public class AuthControlador {
         String token = jwtGenerador.generarToken(authentication);
         return new ResponseEntity<>(new AuthRespuestaDTO(token), HttpStatus.OK);
     }
-
 }

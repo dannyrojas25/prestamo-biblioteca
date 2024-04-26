@@ -24,6 +24,4 @@ public class Usuarios {
     @JoinTable(name = "usuario_roles", joinColumns = @JoinColumn(name = "usuario_id", referencedColumnName = "id_usuario")
             ,inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id_role"))
     private List<Roles> roles = new ArrayList<>();
-
-
 }
