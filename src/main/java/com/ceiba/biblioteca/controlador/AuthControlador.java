@@ -37,36 +37,30 @@ public class AuthControlador {
         this.usuarioRepositorio = usuarioRepositorio;
         this.jwtGenerador = jwtGenerador;
     }
-    //Método para poder registrar usuarios con rol USER.
+    //Método para poder registrar usuarios con rol dependiendo del rol que se elija.
     @PostMapping("registro")
-    public ResponseEntity<String> registrar(@RequestBody RegistroDTO registroDTO){
+    public ResponseEntity<String> registrarUsuario(@RequestBody RegistroDTO registroDTO){
         if (Boolean.TRUE.equals(usuarioRepositorio.existsByUsername(registroDTO.getUsername()))){
             return ResponseEntity.badRequest().body("El usuario ya existe, intenta con otro.");
         }
         Usuarios usuarios = new Usuarios();
         usuarios.setUsername(registroDTO.getUsername());
         usuarios.setPassword(passwordEncoder.encode(registroDTO.getPassword()));
-        Roles roles = rolesRepositorio.findByName("USER")
-                .orElseThrow(() -> new NoSuchElementException("No se encontró el rol USER"));
-        usuarios.setRoles(Collections.singletonList(roles));
-        usuarioRepositorio.save(usuarios);
-        return ResponseEntity.ok().body("Registro de usuario exitoso.");
-    }
-
-    //Método para poder registrar usuarios con rol ADMIN.
-    @PostMapping("registroAdm")
-    public ResponseEntity<String> registrarAdmin (@RequestBody RegistroDTO registroDTO){
-        if (Boolean.TRUE.equals(usuarioRepositorio.existsByUsername(registroDTO.getUsername()))){
-            return  ResponseEntity.badRequest().body("El usuario ya existe, intenta con otro.");
+        Roles roles;
+        if (registroDTO.getRol().equalsIgnoreCase("ADMIN")) {
+            roles = rolesRepositorio.findByName("ADMIN")
+                    .orElseThrow(() -> new NoSuchElementException("No se encontró el rol ADMIN"));
+            return registrarUsuarioConRol(usuarios, roles, "Registro de usuario administrador exitoso.");
+        } else {
+            roles = rolesRepositorio.findByName("USER")
+                    .orElseThrow(() -> new NoSuchElementException("No se encontró el rol USER"));
+            return registrarUsuarioConRol(usuarios, roles, "Registro de usuario exitoso.");
         }
-        Usuarios usuarios = new Usuarios();
-        usuarios.setUsername(registroDTO.getUsername());
-        usuarios.setPassword(passwordEncoder.encode(registroDTO.getPassword()));
-        Roles roles = rolesRepositorio.findByName("ADMIN")
-                .orElseThrow(() -> new NoSuchElementException("No se encontró el rol ADMIN"));
+    }
+    private ResponseEntity<String> registrarUsuarioConRol(Usuarios usuarios, Roles roles, String mensaje) {
         usuarios.setRoles(Collections.singletonList(roles));
         usuarioRepositorio.save(usuarios);
-        return ResponseEntity.ok().body("Registro de usuario administrador exitoso.");
+        return ResponseEntity.ok().body(mensaje);
     }
     //Método para poder loguear un usuario y obtener un token.
     @PostMapping("login")

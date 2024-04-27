@@ -4,13 +4,25 @@ import com.ceiba.biblioteca.modelo.*;
 import com.ceiba.biblioteca.repositorio.LibroRepositorio;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class LibroServicio {
     private LibroRepositorio libroRepositorio;
 
+    public LibroServicio(LibroRepositorio libroRepositorio) {
+        this.libroRepositorio = libroRepositorio;
+    }
+
     public ResponseEntity<String> guardarLibrosDesdeJSON(LibroJSON libroJSON) {
         try {
-            StringBuilder mensaje = new StringBuilder();
+            boolean algunLibroRegistrado = false;
+            boolean todosLibrosRegistrados = true;
+            List<String> librosRegistrados = new ArrayList<>();
+            List<String> librosNoRegistrados = new ArrayList<>();
+
             for (var detalle : libroJSON.getLibros()) {
                 boolean libroExistente = libroRepositorio.existsByNombreAndAuthor(detalle.getNombre(), detalle.getAuthor());
                 if (!libroExistente) {
@@ -20,17 +32,28 @@ public class LibroServicio {
                             .foto(detalle.getFoto())
                             .build();
                     libroRepositorio.save(libro);
+                    algunLibroRegistrado = true;
+                    todosLibrosRegistrados = false;
+                    librosRegistrados.add(detalle.getNombre());
                 } else {
-                    mensaje.append("El libro '").append(detalle.getNombre()).append("' ya existe en la base de datos. No se insertará de nuevo.\n");
-                }
-                if (!mensaje.isEmpty()) {
-                    return new ResponseEntity<>(mensaje.toString(), HttpStatus.OK);
-                } else {
-                    return new ResponseEntity<>("Se registraron exitosamente el/los libro(s).", HttpStatus.OK);
+                    librosNoRegistrados.add(detalle.getNombre());
                 }
             }
-            return new ResponseEntity<>("Se registró exitosamente el/los libro(s).", HttpStatus.OK);
-        }catch (Exception e){
+
+            if (todosLibrosRegistrados) {
+                return new ResponseEntity<>("Todos los libros de la lista ya están registrados en la base de datos.", HttpStatus.OK);
+            } else if (algunLibroRegistrado) {
+                if (librosNoRegistrados.isEmpty()) {
+                    return new ResponseEntity<>("Se registraron exitosamente el/los libro(s) de la lista.", HttpStatus.OK);
+                } else {
+                    String mensajeLibrosRegistrados = String.join(", ", librosRegistrados);
+                    return new ResponseEntity<>("El/los libro(s): '" + mensajeLibrosRegistrados + "' se registraron con éxito.", HttpStatus.OK);
+                }
+            } else {
+                String mensajeLibrosNoRegistrados = String.join(", ", librosNoRegistrados);
+                return new ResponseEntity<>("El/los libro(s) fueron registrados con éxito en la base de datos, a excepción de este(os) libro(s): '" + mensajeLibrosNoRegistrados + "'.", HttpStatus.OK);
+            }
+        } catch (Exception e) {
             return new ResponseEntity<>("Error al procesar la solicitud: " + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
